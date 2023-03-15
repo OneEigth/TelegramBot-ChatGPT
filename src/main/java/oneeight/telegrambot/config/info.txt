@@ -1,0 +1,82 @@
+Для добавления брокера сообщений RabbitMQ в ваше приложение Java Spring Boot вы можете использовать библиотеку
+Spring for RabbitMQ. Для этого выполните следующие шаги:
+
+Добавьте зависимость для Spring for RabbitMQ в файл pom.xml вашего проекта:
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-amqp</artifactId>
+</dependency>
+
+
+Создайте файл конфигурации для подключения к RabbitMQ. Создайте класс с аннотацией @Configuration и метод с аннотацией
+@Bean, который возвращает объект класса org.springframework.amqp.rabbit.connection.ConnectionFactory:
+
+@Configuration
+public class RabbitMQConfig {
+    @Bean
+    public ConnectionFactory connectionFactory() {
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+        connectionFactory.setHost("localhost");
+        connectionFactory.setUsername("guest");
+        connectionFactory.setPassword("guest");
+        return connectionFactory;
+    }
+}
+В этом примере мы создаем объект CachingConnectionFactory и настраиваем его подключение к RabbitMQ,
+используя локальный хост, имя пользователя "guest" и пароль "guest". Обратите внимание, что вам нужно
+настроить подключение к RabbitMQ, соответствующее вашей среде разработки.
+
+Создайте слушателя сообщений RabbitMQ. Создайте класс, который реализует интерфейс
+org.springframework.amqp.core.MessageListener и определяет метод onMessage(), который будет вызываться при
+получении сообщения из очереди:
+
+
+@Component
+public class RabbitMQListener implements MessageListener {
+    @Override
+    public void onMessage(Message message) {
+        // Обработка сообщения
+    }
+}
+Настройте очередь сообщений и обменник RabbitMQ. Создайте класс, который будет создавать очередь и обменник,
+используя объект org.springframework.amqp.core.AmqpAdmin:
+
+@Configuration
+public class RabbitMQConfig {
+    @Autowired
+    private RabbitMQListener listener;
+
+    @Bean
+    public Queue queue() {
+        return new Queue("myQueue");
+    }
+
+    @Bean
+    public TopicExchange exchange() {
+        return new TopicExchange("myExchange");
+    }
+
+    @Bean
+    public Binding binding() {
+        return BindingBuilder.bind(queue()).to(exchange()).with("myRoutingKey");
+    }
+
+    @Bean
+    public AmqpAdmin amqpAdmin(ConnectionFactory connectionFactory) {
+        return new RabbitAdmin(connectionFactory);
+    }
+
+    @Bean
+    public SimpleMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory) {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.setQueues(queue());
+        container.setMessageListener(listener);
+        return container;
+    }
+}
+
+В этом примере мы создаем объекты Queue и TopicExchange и связываем их с помощью объекта Binding.
+Мы также создаем объект RabbitAdmin, который создает очередь и обменник в RabbitMQ. Затем мы создаем
+объект SimpleMessageListenerContainer, который слушает очередь и использует объект RabbitMQListener
