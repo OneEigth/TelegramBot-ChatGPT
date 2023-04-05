@@ -40,7 +40,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
             String gptResponse = service.askChatGPTText(text);
             try {
                 sendMessage.setChatId(chatId);
-                sendMessage.setText("GPT ответ: " + gptResponse);
+                sendMessage.setText("ответ: " + gptResponse);
                 execute(sendMessage);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
@@ -54,7 +54,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
          * @param text
          */
         private void pong(SendMessage sendMessage, String chatId, String text) {
-            sendMessage.setText("Ваш запрос к chatGPT: " + text);
+            sendMessage.setText("Ваш вопрос: " + text);
             try {
                 sendMessage.setChatId(chatId);
                 execute(sendMessage);
